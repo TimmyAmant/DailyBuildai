@@ -2,16 +2,24 @@
 
 > AI builds a brand-new website every single day.
 
-DailyBuildAI is a "website of websites" — every day, Claude automatically generates a self-contained site (a game, a tool, generative art, an ambient experience, and more), which gets hosted and archived here in one central hub.
+DailyBuildAI is a "website of websites." Every day, AI generates a completely self-contained site — a game, a tool, generative art, an ambient experience, a data viz, or something nobody's thought of yet. Zero templates, zero human code. Every build is reviewed and approved by a human before it goes live, then archived forever.
+
+---
+
+## What it is
+
+A living archive of AI creativity. Each build is a single HTML file with all CSS and JS inlined — no frameworks, no dependencies, no build tools. Just one file that does one thing, built from scratch every day.
+
+The hub at [dailybuildai.com](https://dailybuildai.com) shows every build ever made, with a countdown to the next one.
 
 ---
 
 ## How it works
 
-1. **Builder** — a Node.js script calls the Claude API with a creative prompt based on the day's category
-2. **Output** — a single self-contained `index.html` is saved to `builds/YYYY-MM-DD/`
-3. **Manifest** — `builds.json` is updated with the build's title, category, and description
-4. **Hub** — the main `index.html` reads `builds.json` and renders today's build + the full archive
+1. **Prompt** — AI receives a creative brief with no fixed rotation. The category is wide open: games, tools, art, experiments, anything.
+2. **Build** — AI generates a fully self-contained `index.html` with inline CSS and JS. No external dependencies.
+3. **Review** — A human reviews the build. Once approved, it goes live with a "Human approved" badge.
+4. **Archive** — `builds.json` is updated and the build appears on the hub. Every build lives at its own URL forever.
 
 ---
 
@@ -19,76 +27,58 @@ DailyBuildAI is a "website of websites" — every day, Claude automatically gene
 
 ```
 DailyBuildAI/
-├── index.html              ← Hub (gallery + archive)
-├── hub.css                 ← Styles
-├── hub.js                  ← Reads builds.json, renders everything
-├── builds.json             ← Manifest of all builds
+├── index.html              ← Homepage (hero + last 10 builds)
+├── archive.html            ← Full archive page (all builds)
+├── about.html              ← About the project
+├── contact.html            ← Contact page
+├── hub.css                 ← Hub styles + custom build thumbnails
+├── hub.js                  ← Reads builds.json, renders archive grid
+├── builds.json             ← Manifest of every build
+├── BUILD_CHECKLIST.md      ← Checklist for creating new builds
 ├── builds/
-│   └── YYYY-MM-DD/
-│       └── index.html      ← Each daily build (fully self-contained)
+│   ├── 2026-02-24/
+│   │   └── index.html      ← Build #1: Cosmic Canvas
+│   └── 2026-02-25/
+│       └── index.html      ← Build #2: ScrapeView
 └── builder/
-    ├── generate.js         ← Daily site generator
-    ├── package.json
-    └── .env.example
+    ├── generate.js         ← Claude API automation script
+    └── package.json
 ```
 
 ---
 
-## Running the builder
+## Site layout
 
-```bash
-cd builder
-cp .env.example .env       # add your ANTHROPIC_API_KEY
-npm install
-node generate.js           # builds today's site
-```
+**Homepage** — Hero section with the tagline, a countdown timer to midnight (when the next build drops), and a 2×2 stat grid. Below that, the 10 most recent builds as cards with custom CSS artwork.
 
-**Options:**
-```bash
-node generate.js --dry-run             # preview without writing files
-node generate.js --date=2026-03-01     # build for a specific date
-node generate.js --force               # overwrite an existing build
-```
+**Archive** — Every build ever made, newest first. Each card shows the title, description, category, date, and a human-approved badge if reviewed.
+
+**Build pages** — Each daily build lives at `/builds/YYYY-MM-DD/`. Every build has a back arrow to return to the hub and a DailyBuild badge with its number.
+
+**About** — How the project works, the 4-step process, and what makes it different.
+
+**Contact** — Reach out at contact@dailybuildai.com.
 
 ---
 
-## Self-hosting
+## Status
 
-This is a fully static site — no server required.
+| Stat | Value |
+|------|-------|
+| Total builds | 2 |
+| First build | Feb 24, 2026 |
+| Latest build | Feb 25, 2026 |
+| Streak | 2 days |
+| Categories used | Generative Art, Interactive Tool |
+| Human approved | 1 of 2 |
+| Lines of human code | 0 |
 
-**Serve locally:**
-```bash
-npx serve .
-```
+### Build log
 
-**Deploy:** drag the entire project folder to any static host (Nginx, Caddy, Apache, Netlify, Vercel, GitHub Pages, etc.). No build step needed.
-
----
-
-## Automating daily builds
-
-Add a cron job to run the builder each day and deploy the result:
-
-```cron
-0 8 * * * cd /path/to/DailyBuildAI/builder && node generate.js
-```
-
----
-
-## Build categories
-
-Each day is assigned a category deterministically based on the date:
-
-- Generative Art
-- Mini Game
-- Interactive Tool
-- Landing Page
-- Ambient Experience
-- Data Visualization
-- Typography Play
-- CSS Art
-- Browser Toy
-- Digital Experiment
+| # | Date | Title | Category | Approved |
+|---|------|-------|----------|----------|
+| 1 | 2026-02-24 | Cosmic Canvas | Generative Art | Yes |
+| 2 | 2026-02-25 | ScrapeView | Interactive Tool | No |
 
 ---
 
