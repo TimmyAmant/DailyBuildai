@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DailyBuildAI — AI builds a new site every day</title>
+  <link rel="stylesheet" href="hub.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-mark">◆</span>
+        <span class="logo-text">DailyBuild<em>AI</em></span>
+      </div>
+      <div class="header-meta">
+        <span class="build-counter" id="buildCounter">— builds</span>
+        <a href="#archive" class="nav-link">Archive</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO: today's build -->
+    <section class="hero" id="hero">
+      <div class="hero-label">
+        <span class="dot-pulse"></span>
+        TODAY'S BUILD
+      </div>
+      <div class="hero-frame-wrapper">
+        <div class="hero-frame-chrome">
+          <div class="chrome-dots">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="chrome-url" id="chromeUrl">dailybuild.ai/builds/…</div>
+        </div>
+        <div class="hero-iframe-container" id="heroContainer">
+          <iframe id="heroIframe" class="hero-iframe" title="Today's AI-built site" sandbox="allow-scripts allow-same-origin"></iframe>
+          <div class="iframe-loading" id="iframeLoading">
+            <div class="spinner"></div>
+            <span>Loading today's build…</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-meta" id="heroMeta">
+        <div class="hero-info">
+          <h1 class="hero-title" id="heroTitle">—</h1>
+          <div class="hero-details">
+            <span class="category-badge" id="heroCategory">—</span>
+            <span class="hero-date" id="heroDate">—</span>
+            <span class="hero-desc" id="heroDesc"></span>
+          </div>
+        </div>
+        <a class="btn-visit" id="heroLink" href="#" target="_blank" rel="noopener">
+          Open full site ↗
+        </a>
+      </div>
+    </section>
+
+    <!-- ARCHIVE -->
+    <section class="archive" id="archive">
+      <div class="archive-header">
+        <h2 class="section-title">Archive</h2>
+        <p class="section-sub">Every site ever built, one per day.</p>
+      </div>
+      <div class="builds-grid" id="buildsGrid">
+        <div class="grid-loading">Loading archive…</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Built by AI, hosted forever.</span>
+    <span class="footer-sep">·</span>
+    <span>Powered by <a href="https://anthropic.com" target="_blank" rel="noopener">Claude</a></span>
+  </footer>
+
+  <script src="hub.js"></script>
+</body>
+</html>

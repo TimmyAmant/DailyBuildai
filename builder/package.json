@@ -1,0 +1,14 @@
+{
+  "name": "dailybuildai-builder",
+  "version": "1.0.0",
+  "description": "Daily AI site generator for DailyBuildAI",
+  "type": "module",
+  "scripts": {
+    "build": "node generate.js",
+    "build:dry": "node generate.js --dry-run",
+    "build:force": "node generate.js --force"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0"
+  }
+}

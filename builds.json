@@ -1,0 +1,11 @@
+{
+  "builds": [
+    {
+      "date": "2026-02-25",
+      "title": "Cosmic Canvas",
+      "category": "Generative Art",
+      "description": "An interactive particle art generator — click anywhere to create colorful cosmic explosions",
+      "path": "/builds/2026-02-25/"
+    }
+  ]
+}
