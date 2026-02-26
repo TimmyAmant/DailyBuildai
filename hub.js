@@ -74,8 +74,6 @@ function buildCard(build, isToday) {
   const a = document.createElement('a');
   a.className = 'build-card' + (isToday ? ' is-today' : '');
   a.href = build.path;
-  a.target = '_blank';
-  a.rel = 'noopener';
 
   const gradient = getCategoryGradient(build.category);
   const emoji = getCategoryEmoji(build.category);
