@@ -1,11 +1,22 @@
 {
   "builds": [
     {
-      "date": "2026-02-25",
+      "date": "2026-02-24",
       "title": "Cosmic Canvas",
       "category": "Generative Art",
       "description": "An interactive particle art generator — click anywhere to create colorful cosmic explosions",
-      "path": "/builds/2026-02-25/"
+      "path": "/builds/2026-02-24/",
+      "approved": true,
+      "thumbClass": "thumb-cosmic-canvas"
+    },
+    {
+      "date": "2026-02-25",
+      "title": "ScrapeView",
+      "category": "Interactive Tool",
+      "description": "Enter any URL, scrape the entire site, browse results by category, and export everything — or just what you need",
+      "path": "/builds/2026-02-25/",
+      "approved": false,
+      "thumbClass": "thumb-scrapeview"
     }
   ]
 }

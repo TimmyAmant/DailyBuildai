@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — DailyBuildAI</title>
+  <link rel="stylesheet" href="hub.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+          <span class="logo-mark">◆</span>
+          <span class="logo-text">DailyBuild<em>AI</em></span>
+        </a>
+      </div>
+      <div class="header-meta">
+        <a href="/archive.html" class="nav-link">Archive</a>
+        <a href="/about.html" class="nav-link" style="color:var(--text)">About</a>
+        <a href="/contact.html" class="nav-link">Contact</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="page-hero-inner">
+        <div class="hero-eyebrow" style="margin-bottom:20px">
+          <span class="dot-pulse"></span>
+          <span>About the project</span>
+        </div>
+        <h1 class="page-title">A new website,<br>every single day.</h1>
+        <p class="page-lead">DailyBuildAI is an experiment in autonomous creativity — AI doesn't just assist, it builds from scratch. Zero lines of human code. Every build is reviewed and approved by a human before it goes live.</p>
+      </div>
+    </section>
+
+    <section class="page-content">
+      <div class="content-inner">
+
+        <div class="content-block">
+          <h2>What is this?</h2>
+          <p>Every day, an AI (Claude, by Anthropic) receives a creative prompt and generates a complete, self-contained website — a game, a tool, generative art, an ambient experience, or something no one's thought of yet. There are no templates and no limits on what it can create. The categories are unlimited.</p>
+          <p>A human reviews the result, and once approved, it gets published here and lives forever in the archive.</p>
+        </div>
+
+        <div class="content-block">
+          <h2>Why?</h2>
+          <p>Because AI creativity is worth watching in real time. Each build is a snapshot of what AI can imagine on a given day. Over time, the archive becomes a living record of what autonomous creative systems are capable of — and how they evolve.</p>
+          <p>Some builds will surprise you. Some won't. That's the point.</p>
+        </div>
+
+        <div class="content-block">
+          <h2>How it works</h2>
+          <div class="steps">
+            <div class="step">
+              <span class="step-num">01</span>
+              <div>
+                <strong>Daily prompt</strong>
+                <p>Each day, the AI receives a creative brief. There's no fixed rotation — the category is wide open, from generative art to mini games to things that don't have a name yet.</p>
+              </div>
+            </div>
+            <div class="step">
+              <span class="step-num">02</span>
+              <div>
+                <strong>AI builds</strong>
+                <p>Claude writes a complete, self-contained HTML file — all CSS and JS inline, zero external dependencies. No human edits the code. Zero lines written by humans.</p>
+              </div>
+            </div>
+            <div class="step">
+              <span class="step-num">03</span>
+              <div>
+                <strong>Human reviews</strong>
+                <p>Every build is reviewed by a human before going live. If it passes, it gets the "Human Approved" badge. No Skynet here.</p>
+              </div>
+            </div>
+            <div class="step">
+              <span class="step-num">04</span>
+              <div>
+                <strong>Published forever</strong>
+                <p>The build goes live at <code>/builds/YYYY-MM-DD/</code> and joins the permanent archive. A countdown on the homepage ticks down to the next one.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-block">
+          <h2>The numbers</h2>
+          <div class="about-stats">
+            <div class="stat-card">
+              <span class="stat-card-num" id="aboutStatBuilds">—</span>
+              <span class="stat-card-label">sites built</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-card-num">∞</span>
+              <span class="stat-card-label">unlimited categories</span>
+            </div>
+            <div class="stat-card stat-card-accent">
+              <span class="stat-card-num">24h</span>
+              <span class="stat-card-label">new build every day</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-card-num">0</span>
+              <span class="stat-card-label">lines written by humans</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-cta">
+          <a href="/archive.html" class="btn-visit">Browse the archive ↗</a>
+          <a href="/contact.html" class="btn-outline">Get in touch</a>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Built by AI, hosted forever.</span>
+    <span class="footer-sep">·</span>
+    <span>Powered by <a href="https://anthropic.com" target="_blank" rel="noopener">Claude</a></span>
+  </footer>
+
+  <script>
+    fetch('./builds.json?v=' + Date.now())
+      .then(r => r.json())
+      .then(d => {
+        const el = document.getElementById('aboutStatBuilds');
+        if (el) el.textContent = (d.builds || []).length;
+      })
+      .catch(() => {});
+  </script>
+</body>
+</html>

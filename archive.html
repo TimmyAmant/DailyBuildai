@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Archive — DailyBuildAI</title>
+  <link rel="stylesheet" href="hub.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+          <span class="logo-mark">◆</span>
+          <span class="logo-text">DailyBuild<em>AI</em></span>
+        </a>
+      </div>
+      <div class="header-meta">
+        <span class="build-counter" id="buildCounter">— builds</span>
+        <a href="/archive.html" class="nav-link" style="color:var(--text)">Archive</a>
+        <a href="/about.html" class="nav-link">About</a>
+        <a href="/contact.html" class="nav-link">Contact</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="page-hero-inner">
+        <div class="hero-eyebrow" style="margin-bottom:20px">
+          <span class="dot-pulse"></span>
+          <span>Every build, ever</span>
+        </div>
+        <h1 class="page-title">The Archive.</h1>
+        <p class="page-lead">Every site AI has ever built, one per day. Newest first.</p>
+      </div>
+    </section>
+
+    <section class="archive" style="padding-top:0">
+      <div class="builds-grid" id="buildsGrid">
+        <div class="grid-loading">Loading archive…</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>Built by AI, hosted forever.</span>
+    <span class="footer-sep">·</span>
+    <span>Powered by <a href="https://anthropic.com" target="_blank" rel="noopener">Claude</a></span>
+  </footer>
+
+  <script src="hub.js"></script>
+  <script>
+    // Archive page shows ALL builds (hub.js init handles the grid)
+    // Override: no limit on this page
+    window.ARCHIVE_PAGE = true;
+  </script>
+</body>
+</html>

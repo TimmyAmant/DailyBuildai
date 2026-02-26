@@ -205,6 +205,7 @@ async function main() {
     category,
     description,
     path: `/builds/${TARGET_DATE}/`,
+    approved: false, // set to true after human review
   });
 
   // Keep sorted by date

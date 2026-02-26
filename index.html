@@ -15,45 +15,45 @@
       </div>
       <div class="header-meta">
         <span class="build-counter" id="buildCounter">— builds</span>
-        <a href="#archive" class="nav-link">Archive</a>
+        <a href="/archive.html" class="nav-link">Archive</a>
+        <a href="/about.html" class="nav-link">About</a>
+        <a href="/contact.html" class="nav-link">Contact</a>
       </div>
     </div>
   </header>
 
   <main>
-    <!-- HERO: today's build -->
+    <!-- HERO -->
     <section class="hero" id="hero">
-      <div class="hero-label">
-        <span class="dot-pulse"></span>
-        TODAY'S BUILD
+      <div class="hero-left">
+        <div class="hero-eyebrow">
+          <span class="dot-pulse"></span>
+          <span>Next build in </span>
+          <span class="hero-countdown" id="heroCountdown">--:--:--</span>
+        </div>
+        <h1 class="hero-heading">
+          Every day,<br>AI builds<br>something <em>new.</em>
+        </h1>
       </div>
-      <div class="hero-frame-wrapper">
-        <div class="hero-frame-chrome">
-          <div class="chrome-dots">
-            <span></span><span></span><span></span>
+      <div class="hero-right">
+        <div class="hero-stats-grid">
+          <div class="stat-card">
+            <span class="stat-card-num" id="statBuilds">—</span>
+            <span class="stat-card-label">sites built</span>
           </div>
-          <div class="chrome-url" id="chromeUrl">dailybuild.ai/builds/…</div>
-        </div>
-        <div class="hero-iframe-container" id="heroContainer">
-          <iframe id="heroIframe" class="hero-iframe" title="Today's AI-built site" sandbox="allow-scripts allow-same-origin"></iframe>
-          <div class="iframe-loading" id="iframeLoading">
-            <div class="spinner"></div>
-            <span>Loading today's build…</span>
+          <div class="stat-card">
+            <span class="stat-card-num">∞</span>
+            <span class="stat-card-label">unlimited categories</span>
           </div>
-        </div>
-      </div>
-      <div class="hero-meta" id="heroMeta">
-        <div class="hero-info">
-          <h1 class="hero-title" id="heroTitle">—</h1>
-          <div class="hero-details">
-            <span class="category-badge" id="heroCategory">—</span>
-            <span class="hero-date" id="heroDate">—</span>
-            <span class="hero-desc" id="heroDesc"></span>
+          <div class="stat-card stat-card-accent">
+            <span class="stat-card-num">24h</span>
+            <span class="stat-card-label">new build every day</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card-num">0</span>
+            <span class="stat-card-label">lines written by humans</span>
           </div>
         </div>
-        <a class="btn-visit" id="heroLink" href="#" target="_blank" rel="noopener">
-          Open full site ↗
-        </a>
       </div>
     </section>
 
