@@ -24,8 +24,17 @@
       "category": "Data Visualization",
       "description": "Enter your birthday and see your life visualized — heartbeats, breaths, orbits, milestones, and every week you've lived",
       "path": "/builds/2026-02-26/",
-      "approved": false,
+      "approved": true,
       "thumbClass": "thumb-life-dashboard"
+    },
+    {
+      "date": "2026-02-27",
+      "title": "Cipher Machine",
+      "category": "Cryptography Tool",
+      "description": "Encode and decode secret messages with 8 classic ciphers — Caesar, ROT13, Atbash, Vigen\u00e8re, Morse, Binary, and more",
+      "path": "/builds/2026-02-27/",
+      "approved": false,
+      "thumbClass": "thumb-cipher-machine"
     }
   ]
 }

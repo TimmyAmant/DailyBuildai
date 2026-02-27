@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cipher Machine — DailyBuildAI #4</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0f0a;
+  --surface: #0f1a0f;
+  --surface2: #142014;
+  --border: #1a2e1a;
+  --border2: #254025;
+  --accent: #00ff41;
+  --accent-dim: rgba(0,255,65,0.15);
+  --amber: #ffb000;
+  --amber-dim: rgba(255,176,0,0.15);
+  --red: #ff3333;
+  --text: #d4e8d4;
+  --text2: #7a9a7a;
+  --text3: #3d5a3d;
+  --font: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Scanline overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ─── Top bar ─── */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(10,15,10,0.9);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text2);
+  transition: color 0.2s;
+  font-family: var(--font-sans);
+}
+.back-link:hover { color: var(--accent); }
+
+.build-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid rgba(0,255,65,0.3);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-family: var(--font-sans);
+}
+
+.top-date {
+  font-size: 0.75rem;
+  color: var(--text3);
+}
+
+/* ─── Container ─── */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+/* ─── Header ─── */
+.page-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.lock-icon {
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 20px rgba(0,255,65,0.3));
+}
+
+.page-title {
+  font-family: var(--font-sans);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--accent);
+  text-shadow: 0 0 30px rgba(0,255,65,0.2);
+  margin-bottom: 8px;
+}
+
+.page-sub {
+  font-size: 0.85rem;
+  color: var(--text2);
+  font-family: var(--font-sans);
+}
+
+/* ─── Cipher selector ─── */
+.cipher-selector {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.cipher-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.03em;
+}
+
+.cipher-btn:hover {
+  border-color: var(--border2);
+  color: var(--text);
+}
+
+.cipher-btn.active {
+  background: var(--accent-dim);
+  border-color: rgba(0,255,65,0.4);
+  color: var(--accent);
+  box-shadow: 0 0 16px rgba(0,255,65,0.1);
+}
+
+/* ─── Mode toggle ─── */
+.mode-toggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+  gap: 0;
+}
+
+.mode-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 10px 28px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.mode-btn:first-child { border-radius: 6px 0 0 6px; }
+.mode-btn:last-child { border-radius: 0 6px 6px 0; border-left: none; }
+
+.mode-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+/* ─── Key input ─── */
+.key-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.key-label {
+  font-size: 0.75rem;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.key-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--amber);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  padding: 8px 14px;
+  width: 160px;
+  outline: none;
+  transition: border-color 0.2s;
+  text-align: center;
+}
+
+.key-input:focus { border-color: var(--amber); box-shadow: 0 0 12px rgba(255,176,0,0.15); }
+.key-input::placeholder { color: var(--text3); }
+
+.key-input[type="number"] { width: 80px; }
+
+/* ─── Workspace ─── */
+.workspace {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+
+.panel-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+
+.panel-action {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 0.65rem;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.panel-action:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.text-area {
+  width: 100%;
+  min-height: 200px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.85rem;
+  padding: 16px;
+  resize: vertical;
+  outline: none;
+  line-height: 1.7;
+}
+
+.text-area::placeholder { color: var(--text3); }
+
+.output-text {
+  padding: 16px;
+  min-height: 200px;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--accent);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.output-text.morse { letter-spacing: 0.15em; }
+.output-text.binary { word-break: break-all; }
+
+/* Scramble animation character */
+.char-scramble {
+  display: inline-block;
+  animation: scrambleIn 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes scrambleIn {
+  0% { opacity: 0; transform: translateY(-4px); filter: blur(2px); }
+  60% { opacity: 1; transform: translateY(1px); filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Info card ─── */
+.info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 32px;
+}
+
+.info-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 8px;
+}
+
+.info-text {
+  font-size: 0.8rem;
+  color: var(--text2);
+  line-height: 1.6;
+  font-family: var(--font-sans);
+}
+
+.info-text code {
+  background: var(--accent-dim);
+  color: var(--accent);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: var(--font);
+  font-size: 0.75rem;
+}
+
+/* ─── Reference table ─── */
+.ref-section {
+  margin-bottom: 32px;
+}
+
+.ref-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.ref-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 6px;
+}
+
+.ref-cell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px;
+  text-align: center;
+  font-size: 0.7rem;
+  transition: border-color 0.2s;
+}
+
+.ref-cell:hover {
+  border-color: var(--border2);
+}
+
+.ref-letter {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.ref-value {
+  color: var(--accent);
+  font-size: 0.65rem;
+  margin-top: 2px;
+}
+
+/* ─── Toast ─── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 10px 24px;
+  border-radius: 8px;
+  z-index: 200;
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ─── Footer ─── */
+.page-footer {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text3);
+  font-family: var(--font-sans);
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.page-footer a { color: var(--accent); }
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+  .container { padding: 24px 16px 60px; }
+  .workspace { grid-template-columns: 1fr; }
+  .cipher-selector { gap: 6px; }
+  .cipher-btn { padding: 6px 12px; font-size: 0.7rem; }
+  .key-row { flex-direction: column; gap: 8px; }
+  .ref-grid { grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); }
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="/" class="back-link">&#8592; Cipher Machine</a>
+  <span class="build-badge">DailyBuild #4</span>
+  <span class="top-date">Feb 27, 2026</span>
+</div>
+
+<div class="container">
+  <header class="page-header">
+    <div class="lock-icon">&#x1F510;</div>
+    <h1 class="page-title">Cipher Machine</h1>
+    <p class="page-sub">Encode and decode secret messages with classic ciphers</p>
+  </header>
+
+  <!-- Cipher selector -->
+  <div class="cipher-selector" id="cipherSelector">
+    <button class="cipher-btn active" data-cipher="caesar">Caesar</button>
+    <button class="cipher-btn" data-cipher="rot13">ROT13</button>
+    <button class="cipher-btn" data-cipher="atbash">Atbash</button>
+    <button class="cipher-btn" data-cipher="vigenere">Vigen&egrave;re</button>
+    <button class="cipher-btn" data-cipher="morse">Morse</button>
+    <button class="cipher-btn" data-cipher="binary">Binary</button>
+    <button class="cipher-btn" data-cipher="reverse">Reverse</button>
+    <button class="cipher-btn" data-cipher="a1z26">A1Z26</button>
+  </div>
+
+  <!-- Encode / Decode toggle -->
+  <div class="mode-toggle">
+    <button class="mode-btn active" data-mode="encode" id="btnEncode">Encode</button>
+    <button class="mode-btn" data-mode="decode" id="btnDecode">Decode</button>
+  </div>
+
+  <!-- Key input (shown for Caesar / Vigenere) -->
+  <div class="key-row" id="keyRow" style="display:none">
+    <span class="key-label" id="keyLabel">Shift</span>
+    <input class="key-input" id="keyInput" type="number" value="3" min="1" max="25" placeholder="3" />
+  </div>
+
+  <!-- Workspace -->
+  <div class="workspace">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-label" id="inputLabel">Plaintext</span>
+        <button class="panel-action" onclick="clearInput()">Clear</button>
+      </div>
+      <textarea class="text-area" id="inputArea" placeholder="Type your message here..." spellcheck="false"></textarea>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-label" id="outputLabel">Ciphertext</span>
+        <button class="panel-action" onclick="copyOutput()">Copy</button>
+      </div>
+      <div class="output-text" id="outputArea"></div>
+    </div>
+  </div>
+
+  <!-- Info card -->
+  <div class="info-card" id="infoCard">
+    <div class="info-title" id="infoTitle">About Caesar Cipher</div>
+    <div class="info-text" id="infoText">
+      One of the oldest known ciphers, used by Julius Caesar. Each letter is shifted by a fixed number of positions in the alphabet. With a shift of <code>3</code>, A becomes D, B becomes E, and so on. There are only 25 possible shifts, making it easy to crack by brute force.
+    </div>
+  </div>
+
+  <!-- Reference table -->
+  <div class="ref-section" id="refSection">
+    <div class="ref-title" id="refTitle">Caesar Shift Reference (Shift: 3)</div>
+    <div class="ref-grid" id="refGrid"></div>
+  </div>
+
+  <footer class="page-footer">
+    Secrets are safe here. Maybe.<br>
+    <a href="/">DailyBuildAI</a> &middot; Build #4
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ─── State ───
+  let currentCipher = 'caesar';
+  let currentMode = 'encode';
+  let debounceTimer;
+
+  // ─── Cipher info ───
+  const cipherInfo = {
+    caesar: {
+      title: 'About Caesar Cipher',
+      text: 'One of the oldest known ciphers, used by Julius Caesar. Each letter is shifted by a fixed number of positions in the alphabet. With a shift of <code>3</code>, A becomes D, B becomes E, and so on. There are only 25 possible shifts, making it easy to crack by brute force.',
+      hasKey: true, keyType: 'number', keyLabel: 'Shift', keyDefault: '3', keyPlaceholder: '3', keyMin: 1, keyMax: 25
+    },
+    rot13: {
+      title: 'About ROT13',
+      text: 'A special case of the Caesar cipher with a fixed shift of <code>13</code>. Since the alphabet has 26 letters, applying ROT13 twice returns the original text. Widely used online to hide spoilers and puzzle answers.',
+      hasKey: false
+    },
+    atbash: {
+      title: 'About Atbash Cipher',
+      text: 'An ancient Hebrew cipher that maps the first letter of the alphabet to the last, the second to the second-last, and so on. A becomes Z, B becomes Y, C becomes X. Symmetric \u2014 encoding and decoding are the same operation.',
+      hasKey: false
+    },
+    vigenere: {
+      title: 'About Vigen\u00e8re Cipher',
+      text: 'A polyalphabetic cipher from the 16th century, once called "le chiffre ind\u00e9chiffrable" (the undecipherable cipher). Uses a keyword to shift each letter by a different amount. Much harder to crack than Caesar, though modern frequency analysis can break it.',
+      hasKey: true, keyType: 'text', keyLabel: 'Keyword', keyDefault: 'SECRET', keyPlaceholder: 'SECRET', keyMin: null, keyMax: null
+    },
+    morse: {
+      title: 'About Morse Code',
+      text: 'Developed by Samuel Morse in the 1830s for telegraphy. Encodes letters as sequences of dots <code>.</code> and dashes <code>-</code>. Letters are separated by spaces, words by <code>/</code>. Still used today in aviation and amateur radio.',
+      hasKey: false
+    },
+    binary: {
+      title: 'About Binary Encoding',
+      text: 'Represents each character as its 8-bit ASCII binary value. The letter A is <code>01000001</code> (65 in decimal). Not a true cipher since there\'s no secret key, but it makes text unreadable to humans.',
+      hasKey: false
+    },
+    reverse: {
+      title: 'About Reverse Cipher',
+      text: 'The simplest "cipher" \u2014 just reverse the entire string. <code>HELLO</code> becomes <code>OLLEH</code>. Trivially easy to break, but sometimes combined with other ciphers as an extra step.',
+      hasKey: false
+    },
+    a1z26: {
+      title: 'About A1Z26 Cipher',
+      text: 'Replaces each letter with its position in the alphabet. A = <code>1</code>, B = <code>2</code>, ..., Z = <code>26</code>. Numbers are separated by dashes. Simple substitution, but useful as a building block in puzzle design.',
+      hasKey: false
+    }
+  };
+
+  // ─── Morse code map ───
+  const morseMap = {
+    'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....','I':'..','J':'.---',
+    'K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.','Q':'--.-','R':'.-.','S':'...','T':'-',
+    'U':'..-','V':'...-','W':'.--','X':'-..-','Y':'-.--','Z':'--..','0':'-----','1':'.----','2':'..---',
+    '3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.', '.':'.-.-.-',
+    ',':'--..--','?':'..--..','!':'-.-.--',"'":'.----.','"':'.-..-.','(':'-.--.',')':'-.--.-',
+    '&':'.-...',':':'---...',';':'-.-.-.','=':'-...-','+':'.-.-.','-':'-....-','/':'-..-.','@':'.--.-.',
+    ' ':' '
+  };
+  const morseReverse = {};
+  for (const [k, v] of Object.entries(morseMap)) { if (k !== ' ') morseReverse[v] = k; }
+
+  // ─── Cipher functions ───
+  function caesarEncode(text, shift) {
+    return text.split('').map(c => {
+      if (/[a-z]/.test(c)) return String.fromCharCode(((c.charCodeAt(0) - 97 + shift) % 26) + 97);
+      if (/[A-Z]/.test(c)) return String.fromCharCode(((c.charCodeAt(0) - 65 + shift) % 26) + 65);
+      return c;
+    }).join('');
+  }
+
+  function caesarDecode(text, shift) {
+    return caesarEncode(text, 26 - (shift % 26));
+  }
+
+  function rot13(text) {
+    return caesarEncode(text, 13);
+  }
+
+  function atbash(text) {
+    return text.split('').map(c => {
+      if (/[a-z]/.test(c)) return String.fromCharCode(122 - (c.charCodeAt(0) - 97));
+      if (/[A-Z]/.test(c)) return String.fromCharCode(90 - (c.charCodeAt(0) - 65));
+      return c;
+    }).join('');
+  }
+
+  function vigenereEncode(text, key) {
+    if (!key) return text;
+    key = key.toUpperCase().replace(/[^A-Z]/g, '');
+    if (!key.length) return text;
+    let ki = 0;
+    return text.split('').map(c => {
+      if (/[a-zA-Z]/.test(c)) {
+        const base = /[a-z]/.test(c) ? 97 : 65;
+        const shift = key.charCodeAt(ki % key.length) - 65;
+        ki++;
+        return String.fromCharCode(((c.charCodeAt(0) - base + shift) % 26) + base);
+      }
+      return c;
+    }).join('');
+  }
+
+  function vigenereDecode(text, key) {
+    if (!key) return text;
+    key = key.toUpperCase().replace(/[^A-Z]/g, '');
+    if (!key.length) return text;
+    let ki = 0;
+    return text.split('').map(c => {
+      if (/[a-zA-Z]/.test(c)) {
+        const base = /[a-z]/.test(c) ? 97 : 65;
+        const shift = key.charCodeAt(ki % key.length) - 65;
+        ki++;
+        return String.fromCharCode(((c.charCodeAt(0) - base - shift + 26) % 26) + base);
+      }
+      return c;
+    }).join('');
+  }
+
+  function morseEncode(text) {
+    return text.toUpperCase().split('').map(c => {
+      if (c === ' ') return '/';
+      return morseMap[c] || c;
+    }).join(' ');
+  }
+
+  function morseDecode(text) {
+    return text.split(' / ').map(word =>
+      word.split(' ').map(code => morseReverse[code] || code).join('')
+    ).join(' ');
+  }
+
+  function binaryEncode(text) {
+    return text.split('').map(c => c.charCodeAt(0).toString(2).padStart(8, '0')).join(' ');
+  }
+
+  function binaryDecode(text) {
+    return text.trim().split(/\s+/).map(b => {
+      const n = parseInt(b, 2);
+      return isNaN(n) ? '?' : String.fromCharCode(n);
+    }).join('');
+  }
+
+  function reverseText(text) {
+    return text.split('').reverse().join('');
+  }
+
+  function a1z26Encode(text) {
+    return text.toUpperCase().split('').map(c => {
+      if (/[A-Z]/.test(c)) return (c.charCodeAt(0) - 64).toString();
+      if (c === ' ') return ' ';
+      return c;
+    }).join('-').replace(/-( )-/g, ' ').replace(/^-|-$/g, '');
+  }
+
+  function a1z26Decode(text) {
+    return text.split(' ').map(word =>
+      word.split('-').map(n => {
+        const num = parseInt(n);
+        if (num >= 1 && num <= 26) return String.fromCharCode(num + 64);
+        return n;
+      }).join('')
+    ).join(' ');
+  }
+
+  // ─── Process ───
+  function process(input) {
+    const key = document.getElementById('keyInput').value;
+
+    switch (currentCipher) {
+      case 'caesar':
+        const shift = Math.max(1, Math.min(25, parseInt(key) || 3));
+        return currentMode === 'encode' ? caesarEncode(input, shift) : caesarDecode(input, shift);
+      case 'rot13':
+        return rot13(input);
+      case 'atbash':
+        return atbash(input);
+      case 'vigenere':
+        return currentMode === 'encode' ? vigenereEncode(input, key) : vigenereDecode(input, key);
+      case 'morse':
+        return currentMode === 'encode' ? morseEncode(input) : morseDecode(input);
+      case 'binary':
+        return currentMode === 'encode' ? binaryEncode(input) : binaryDecode(input);
+      case 'reverse':
+        return reverseText(input);
+      case 'a1z26':
+        return currentMode === 'encode' ? a1z26Encode(input) : a1z26Decode(input);
+      default:
+        return input;
+    }
+  }
+
+  // ─── Animate output ───
+  function animateOutput(text) {
+    const output = document.getElementById('outputArea');
+    output.innerHTML = '';
+    output.className = 'output-text';
+    if (currentCipher === 'morse') output.classList.add('morse');
+    if (currentCipher === 'binary') output.classList.add('binary');
+
+    if (!text) return;
+
+    // For short texts, animate character by character
+    if (text.length <= 500) {
+      const chars = text.split('');
+      chars.forEach((ch, i) => {
+        const span = document.createElement('span');
+        span.className = 'char-scramble';
+        span.textContent = ch === ' ' ? '\u00a0' : ch;
+        span.style.animationDelay = (i * 8) + 'ms';
+        output.appendChild(span);
+      });
+    } else {
+      // For long texts, just set it directly
+      output.textContent = text;
+    }
+  }
+
+  // ─── Update ───
+  function update() {
+    const input = document.getElementById('inputArea').value;
+    const result = process(input);
+    animateOutput(result);
+    updateRefTable();
+  }
+
+  function debouncedUpdate() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(update, 80);
+  }
+
+  // ─── UI helpers ───
+  function clearInput() {
+    document.getElementById('inputArea').value = '';
+    document.getElementById('outputArea').innerHTML = '';
+  }
+
+  function copyOutput() {
+    const output = document.getElementById('outputArea');
+    const text = output.textContent.replace(/\u00a0/g, ' ');
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard'));
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  // ─── Cipher selection ───
+  document.getElementById('cipherSelector').addEventListener('click', e => {
+    const btn = e.target.closest('.cipher-btn');
+    if (!btn) return;
+    document.querySelectorAll('.cipher-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentCipher = btn.dataset.cipher;
+    setupCipher();
+    update();
+  });
+
+  // ─── Mode toggle ───
+  document.getElementById('btnEncode').addEventListener('click', () => {
+    currentMode = 'encode';
+    document.getElementById('btnEncode').classList.add('active');
+    document.getElementById('btnDecode').classList.remove('active');
+    document.getElementById('inputLabel').textContent = 'Plaintext';
+    document.getElementById('outputLabel').textContent = 'Ciphertext';
+    update();
+  });
+
+  document.getElementById('btnDecode').addEventListener('click', () => {
+    currentMode = 'decode';
+    document.getElementById('btnDecode').classList.add('active');
+    document.getElementById('btnEncode').classList.remove('active');
+    document.getElementById('inputLabel').textContent = 'Ciphertext';
+    document.getElementById('outputLabel').textContent = 'Plaintext';
+    update();
+  });
+
+  // ─── Setup cipher UI ───
+  function setupCipher() {
+    const info = cipherInfo[currentCipher];
+    document.getElementById('infoTitle').textContent = info.title;
+    document.getElementById('infoText').innerHTML = info.text;
+
+    const keyRow = document.getElementById('keyRow');
+    const keyInput = document.getElementById('keyInput');
+
+    if (info.hasKey) {
+      keyRow.style.display = 'flex';
+      document.getElementById('keyLabel').textContent = info.keyLabel;
+      keyInput.type = info.keyType;
+      keyInput.value = info.keyDefault;
+      keyInput.placeholder = info.keyPlaceholder;
+      if (info.keyMin !== null) keyInput.min = info.keyMin;
+      if (info.keyMax !== null) keyInput.max = info.keyMax;
+    } else {
+      keyRow.style.display = 'none';
+    }
+
+    // Show/hide mode toggle for symmetric ciphers
+    const modeToggle = document.querySelector('.mode-toggle');
+    if (['rot13', 'atbash', 'reverse'].includes(currentCipher)) {
+      modeToggle.style.opacity = '0.3';
+      modeToggle.style.pointerEvents = 'none';
+    } else {
+      modeToggle.style.opacity = '1';
+      modeToggle.style.pointerEvents = 'auto';
+    }
+
+    updateRefTable();
+  }
+
+  // ─── Reference table ───
+  function updateRefTable() {
+    const grid = document.getElementById('refGrid');
+    const title = document.getElementById('refTitle');
+    const section = document.getElementById('refSection');
+    grid.innerHTML = '';
+
+    const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+    if (currentCipher === 'caesar') {
+      const shift = Math.max(1, Math.min(25, parseInt(document.getElementById('keyInput').value) || 3));
+      title.textContent = `Caesar Shift Reference (Shift: ${shift})`;
+      section.style.display = 'block';
+      alpha.split('').forEach(c => {
+        const shifted = String.fromCharCode(((c.charCodeAt(0) - 65 + shift) % 26) + 65);
+        grid.innerHTML += `<div class="ref-cell"><div class="ref-letter">${c}</div><div class="ref-value">${shifted}</div></div>`;
+      });
+    } else if (currentCipher === 'rot13') {
+      title.textContent = 'ROT13 Reference';
+      section.style.display = 'block';
+      alpha.split('').forEach(c => {
+        const shifted = String.fromCharCode(((c.charCodeAt(0) - 65 + 13) % 26) + 65);
+        grid.innerHTML += `<div class="ref-cell"><div class="ref-letter">${c}</div><div class="ref-value">${shifted}</div></div>`;
+      });
+    } else if (currentCipher === 'atbash') {
+      title.textContent = 'Atbash Reference';
+      section.style.display = 'block';
+      alpha.split('').forEach(c => {
+        const mirrored = String.fromCharCode(90 - (c.charCodeAt(0) - 65));
+        grid.innerHTML += `<div class="ref-cell"><div class="ref-letter">${c}</div><div class="ref-value">${mirrored}</div></div>`;
+      });
+    } else if (currentCipher === 'morse') {
+      title.textContent = 'Morse Code Reference';
+      section.style.display = 'block';
+      alpha.split('').forEach(c => {
+        grid.innerHTML += `<div class="ref-cell"><div class="ref-letter">${c}</div><div class="ref-value">${morseMap[c]}</div></div>`;
+      });
+      '0123456789'.split('').forEach(c => {
+        grid.innerHTML += `<div class="ref-cell"><div class="ref-letter">${c}</div><div class="ref-value">${morseMap[c]}</div></div>`;
+      });
+    } else if (currentCipher === 'a1z26') {
+      title.textContent = 'A1Z26 Reference';
+      section.style.display = 'block';
+      alpha.split('').forEach((c, i) => {
+        grid.innerHTML += `<div class="ref-cell"><div class="ref-letter">${c}</div><div class="ref-value">${i + 1}</div></div>`;
+      });
+    } else if (currentCipher === 'vigenere') {
+      title.textContent = 'Vigen\u00e8re \u2014 uses keyword to vary shift per letter';
+      section.style.display = 'block';
+      const key = (document.getElementById('keyInput').value || 'SECRET').toUpperCase().replace(/[^A-Z]/g, '');
+      const keyChars = key.split('');
+      keyChars.forEach((c, i) => {
+        const shift = c.charCodeAt(0) - 65;
+        grid.innerHTML += `<div class="ref-cell"><div class="ref-letter">Key[${i}] = ${c}</div><div class="ref-value">Shift +${shift}</div></div>`;
+      });
+    } else {
+      section.style.display = 'none';
+    }
+  }
+
+  // ─── Event listeners ───
+  document.getElementById('inputArea').addEventListener('input', debouncedUpdate);
+  document.getElementById('keyInput').addEventListener('input', debouncedUpdate);
+
+  // ─── Init ───
+  setupCipher();
+</script>
+</body>
+</html>
