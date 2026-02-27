@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Life Dashboard · DailyBuildAI #3 · Feb 26, 2026</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #07070f;
+    color: #f1f5f9;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HUD */
+  #hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: linear-gradient(to bottom, rgba(7,7,15,0.95), rgba(7,7,15,0.6), transparent);
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .hud-back {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.8rem;
+    pointer-events: all;
+    text-decoration: none;
+    transition: color 0.2s;
+    padding: 4px 0;
+  }
+
+  .hud-back:hover { color: rgba(255,255,255,0.9); }
+  .hud-back svg { flex-shrink: 0; }
+
+  .hud-title {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: rgba(255,255,255,0.9);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hud-badge {
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: rgba(245,158,11,0.3);
+    border: 1px solid rgba(245,158,11,0.5);
+    color: #fbbf24;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+
+  .hud-date { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+
+  /* ── Intro screen ─────────────────────────────── */
+  #intro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 80px 24px 60px;
+    text-align: center;
+    animation: fadeIn 0.8s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .intro-icon {
+    font-size: 3.5rem;
+    margin-bottom: 24px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .intro-title {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  .intro-title em {
+    font-style: normal;
+    background: linear-gradient(90deg, #f59e0b, #ef4444, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .intro-sub {
+    font-size: 1.05rem;
+    color: #94a3b8;
+    margin-bottom: 40px;
+    max-width: 440px;
+    line-height: 1.5;
+  }
+
+  .intro-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .intro-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  .date-input {
+    background: #0e0e1c;
+    border: 2px solid #1e1e3a;
+    border-radius: 12px;
+    color: #f1f5f9;
+    font-size: 1.2rem;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    padding: 14px 24px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    width: 260px;
+    cursor: pointer;
+  }
+
+  .date-input:focus {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 4px rgba(245,158,11,0.15), 0 0 20px rgba(245,158,11,0.1);
+  }
+
+  .date-input::-webkit-calendar-picker-indicator {
+    filter: invert(0.7);
+    cursor: pointer;
+  }
+
+  .btn-go {
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 4px 24px rgba(245,158,11,0.3);
+    letter-spacing: 0.02em;
+  }
+
+  .btn-go:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-go:active { transform: translateY(0); }
+  .btn-go:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .intro-presets {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  .preset-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid #1e1e3a;
+    color: #64748b;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .preset-btn:hover {
+    border-color: #f59e0b;
+    color: #fbbf24;
+    background: rgba(245,158,11,0.08);
+  }
+
+  /* ── Dashboard ────────────────────────────────── */
+  #dashboard {
+    display: none;
+    padding: 80px 24px 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+    animation: fadeIn 0.6s ease;
+  }
+
+  .dash-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .dash-greeting {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  .dash-age-headline {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.15;
+    margin-bottom: 4px;
+  }
+
+  .age-highlight {
+    background: linear-gradient(90deg, #f59e0b, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dash-birthday-note {
+    font-size: 0.85rem;
+    color: #475569;
+  }
+
+  .change-btn {
+    background: none;
+    border: none;
+    color: #f59e0b;
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    margin-left: 6px;
+    font-family: inherit;
+  }
+
+  .change-btn:hover { opacity: 0.7; }
+
+  /* Live counter */
+  .live-counter {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 48px;
+  }
+
+  .counter-unit {
+    background: #0e0e1c;
+    border: 1px solid #1e1e3a;
+    border-radius: 10px;
+    padding: 14px 10px;
+    min-width: 80px;
+    text-align: center;
+    transition: border-color 0.3s;
+  }
+
+  .counter-unit:hover { border-color: rgba(245,158,11,0.3); }
+
+  .counter-val {
+    font-size: 1.6rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: #f1f5f9;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .counter-label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #475569;
+    margin-top: 4px;
+  }
+
+  /* Section titles */
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .section-head h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .section-head .line {
+    flex: 1;
+    height: 1px;
+    background: #1e1e3a;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 48px;
+  }
+
+  .stat-card {
+    background: #0e0e1c;
+    border: 1px solid #1e1e3a;
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color 0.3s, transform 0.2s;
+  }
+
+  .stat-card:hover {
+    border-color: #2a2a50;
+    transform: translateY(-2px);
+  }
+
+  .stat-icon {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .stat-val {
+    font-size: 1.4rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+    line-height: 1.2;
+  }
+
+  .stat-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 2px;
+  }
+
+  .stat-note {
+    font-size: 0.7rem;
+    color: #334155;
+    line-height: 1.3;
+  }
+
+  .stat-card.accent {
+    border-color: rgba(245,158,11,0.25);
+    background: linear-gradient(135deg, rgba(245,158,11,0.06), rgba(239,68,68,0.04));
+  }
+
+  .stat-card.accent .stat-val {
+    background: linear-gradient(90deg, #f59e0b, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Life in weeks */
+  .weeks-section { margin-bottom: 48px; }
+
+  .weeks-legend {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 14px;
+    font-size: 0.72rem;
+    color: #475569;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  .weeks-container {
+    background: #0a0a16;
+    border: 1px solid #1e1e3a;
+    border-radius: 12px;
+    padding: 20px;
+    overflow-x: auto;
+  }
+
+  .weeks-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: fit-content;
+  }
+
+  .weeks-row {
+    display: flex;
+    gap: 1px;
+    align-items: center;
+  }
+
+  .week-cell {
+    width: 7px;
+    height: 7px;
+    border-radius: 1.5px;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+  }
+
+  .week-cell:hover { transform: scale(2.5); z-index: 5; position: relative; }
+
+  .week-cell.lived { background: #f59e0b; opacity: 0.7; }
+  .week-cell.current { background: #ef4444; opacity: 1; box-shadow: 0 0 6px rgba(239,68,68,0.6); }
+  .week-cell.future { background: #1e1e3a; opacity: 0.5; }
+
+  .year-label {
+    width: 28px;
+    font-size: 0.5rem;
+    color: #334155;
+    text-align: right;
+    padding-right: 4px;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .weeks-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 14px;
+    font-size: 0.75rem;
+    color: #475569;
+  }
+
+  .weeks-info strong { color: #94a3b8; }
+
+  /* Milestones */
+  .milestones-section { margin-bottom: 48px; }
+
+  .milestones-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+  }
+
+  .milestone {
+    background: #0e0e1c;
+    border: 1px solid #1e1e3a;
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: border-color 0.3s;
+  }
+
+  .milestone:hover { border-color: #2a2a50; }
+
+  .milestone.reached { border-left: 3px solid #10b981; }
+  .milestone.upcoming { border-left: 3px solid #334155; opacity: 0.6; }
+
+  .milestone-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .milestone-info { flex: 1; min-width: 0; }
+
+  .milestone-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .milestone-detail {
+    font-size: 0.7rem;
+    color: #475569;
+  }
+
+  .milestone-status {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 20px;
+    flex-shrink: 0;
+  }
+
+  .milestone.reached .milestone-status {
+    background: rgba(16,185,129,0.15);
+    color: #6ee7b7;
+  }
+
+  .milestone.upcoming .milestone-status {
+    background: rgba(100,116,139,0.15);
+    color: #64748b;
+  }
+
+  /* Progress bar */
+  .progress-section { margin-bottom: 48px; }
+
+  .progress-bar-wrap {
+    background: #0e0e1c;
+    border: 1px solid #1e1e3a;
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  .progress-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+  }
+
+  .progress-pct {
+    font-size: 2rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(90deg, #f59e0b, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .progress-text {
+    font-size: 0.8rem;
+    color: #475569;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 10px;
+    background: #1e1e3a;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #f59e0b, #ef4444);
+    transition: width 1.5s ease;
+    position: relative;
+  }
+
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 0 8px rgba(255,255,255,0.5);
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.7rem;
+    color: #334155;
+  }
+
+  /* Share section */
+  .share-section {
+    margin-bottom: 48px;
+  }
+
+  .share-wrap {
+    background: #0e0e1c;
+    border: 1px solid #1e1e3a;
+    border-radius: 12px;
+    padding: 28px;
+    text-align: center;
+  }
+
+  .share-wrap p {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 16px;
+  }
+
+  .share-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-share {
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 4px 16px rgba(245,158,11,0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: inherit;
+  }
+
+  .btn-share:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-share:active { transform: translateY(0); }
+
+  .btn-share-copy {
+    background: #14142a;
+    border: 1px solid #2a2a50;
+    box-shadow: none;
+  }
+
+  .btn-share-copy:hover { border-color: #f59e0b; }
+
+  .btn-share-x {
+    background: #000;
+    border: 1px solid #333;
+    box-shadow: none;
+  }
+  .btn-share-x:hover { border-color: #1d9bf0; }
+
+  .btn-share-fb {
+    background: #1877f2;
+    box-shadow: 0 4px 16px rgba(24,119,242,0.25);
+  }
+
+  .btn-share-ig {
+    background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+    box-shadow: 0 4px 16px rgba(225,48,108,0.25);
+  }
+
+  .social-share-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .share-preview {
+    margin-top: 20px;
+    display: none;
+  }
+
+  .share-preview canvas {
+    max-width: 100%;
+    border-radius: 10px;
+    border: 1px solid #2a2a50;
+  }
+
+  .share-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #14142a;
+    border: 1px solid #f59e0b;
+    color: #fbbf24;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 300;
+    pointer-events: none;
+  }
+
+  .share-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Footer */
+  .dash-footer {
+    text-align: center;
+    padding: 40px 0 20px;
+    border-top: 1px solid #1e1e3a;
+    font-size: 0.75rem;
+    color: #334155;
+    line-height: 1.6;
+  }
+
+  .dash-footer a { color: #f59e0b; text-decoration: none; }
+  .dash-footer a:hover { opacity: 0.7; }
+
+  /* Tooltip */
+  .tooltip {
+    position: fixed;
+    background: #14142a;
+    border: 1px solid #2a2a50;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.72rem;
+    color: #94a3b8;
+    pointer-events: none;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+
+  .tooltip.show { opacity: 1; }
+  .tooltip strong { color: #f1f5f9; }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    #hud { padding: 12px 16px; }
+    #intro { padding: 80px 16px 40px; }
+    #dashboard { padding: 70px 16px 40px; }
+    .live-counter { gap: 4px; }
+    .counter-unit { min-width: 60px; padding: 10px 6px; }
+    .counter-val { font-size: 1.2rem; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .stat-card { padding: 14px; }
+    .stat-val { font-size: 1.1rem; }
+    .week-cell { width: 5px; height: 5px; }
+    .year-label { width: 22px; font-size: 0.4rem; }
+    .milestones-grid { grid-template-columns: 1fr; }
+    .intro-title { font-size: 2rem; }
+  }
+
+  @media (max-width: 400px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .counter-unit { min-width: 50px; }
+    .counter-val { font-size: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="hud">
+  <div class="hud-title">
+    <a class="hud-back" href="/" title="Back to DailyBuildAI">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 3L5 8L10 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+    Life Dashboard
+    <span class="hud-badge">DailyBuild #3</span>
+  </div>
+  <div class="hud-date">Feb 26, 2026</div>
+</div>
+
+<!-- Intro Screen -->
+<div id="intro">
+  <div class="intro-icon">&#x1F30D;</div>
+  <h1 class="intro-title">Your <em>Life</em> in Numbers</h1>
+  <p class="intro-sub">Enter your birthday to see a beautiful, real-time visualization of your life — every heartbeat, every breath, every orbit around the sun.</p>
+
+  <div class="intro-form">
+    <label class="intro-label" for="birthday">Your Birthday</label>
+    <input type="date" id="birthday" class="date-input" max="2026-02-26" min="1900-01-01" />
+    <button class="btn-go" id="goBtn" disabled onclick="launchDashboard()">Explore Your Life</button>
+
+    <div class="intro-presets">
+      <button class="preset-btn" onclick="setPreset('1990-06-15')">Gen Z / Millennial</button>
+      <button class="preset-btn" onclick="setPreset('1975-03-22')">Gen X</button>
+      <button class="preset-btn" onclick="setPreset('2000-01-01')">Y2K Baby</button>
+      <button class="preset-btn" onclick="setPreset('1955-10-28')">Boomer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <div class="dash-header">
+    <div class="dash-greeting">Your Life at a Glance</div>
+    <div class="dash-age-headline">You are <span class="age-highlight" id="ageHeadline">—</span> old</div>
+    <div class="dash-birthday-note">
+      Born <span id="birthdayDisplay">—</span>
+      <button class="change-btn" onclick="goBack()">change</button>
+    </div>
+  </div>
+
+  <!-- Live counter -->
+  <div class="live-counter" id="liveCounter">
+    <div class="counter-unit"><div class="counter-val" id="cYears">0</div><div class="counter-label">Years</div></div>
+    <div class="counter-unit"><div class="counter-val" id="cMonths">0</div><div class="counter-label">Months</div></div>
+    <div class="counter-unit"><div class="counter-val" id="cDays">0</div><div class="counter-label">Days</div></div>
+    <div class="counter-unit"><div class="counter-val" id="cHours">0</div><div class="counter-label">Hours</div></div>
+    <div class="counter-unit"><div class="counter-val" id="cMins">0</div><div class="counter-label">Minutes</div></div>
+    <div class="counter-unit"><div class="counter-val" id="cSecs">0</div><div class="counter-label">Seconds</div></div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress-section">
+    <div class="section-head"><h2>Life Progress</h2><div class="line"></div></div>
+    <div class="progress-bar-wrap">
+      <div class="progress-label-row">
+        <span class="progress-pct" id="progressPct">0%</span>
+        <span class="progress-text" id="progressText">of an average 79-year lifespan</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+      <div class="progress-labels">
+        <span>Born</span>
+        <span id="progressYearsLeft">— years to go</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fun stats -->
+  <div class="section-head"><h2>Your Life in Numbers</h2><div class="line"></div></div>
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <!-- Life in weeks -->
+  <div class="weeks-section">
+    <div class="section-head"><h2>Your Life in Weeks</h2><div class="line"></div></div>
+    <div class="weeks-legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#f59e0b"></div> Weeks lived</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#ef4444"></div> This week</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#1e1e3a"></div> Weeks remaining</div>
+    </div>
+    <div class="weeks-container">
+      <div class="weeks-grid" id="weeksGrid"></div>
+    </div>
+    <div class="weeks-info">
+      <span><strong id="weeksLived">0</strong> weeks lived</span>
+      <span><strong id="weeksLeft">0</strong> weeks remaining</span>
+    </div>
+  </div>
+
+  <!-- Milestones -->
+  <div class="milestones-section">
+    <div class="section-head"><h2>Life Milestones</h2><div class="line"></div></div>
+    <div class="milestones-grid" id="milestonesGrid"></div>
+  </div>
+
+  <!-- Share -->
+  <div class="share-section">
+    <div class="section-head"><h2>Share Your Life Stats</h2><div class="line"></div></div>
+    <div class="share-wrap">
+      <p>Generate a shareable image of your life stats and send it to friends.</p>
+      <div class="share-buttons">
+        <button class="btn-share" onclick="generateShareImage()">&#x1F4F8; Generate Image</button>
+        <button class="btn-share btn-share-copy" id="btnDownload" onclick="downloadShareImage()" style="display:none">&#x2B07; Download Image</button>
+      </div>
+      <div class="social-share-row" id="socialShareRow" style="display:none">
+        <button class="btn-share btn-share-x" onclick="shareToX()">𝕏 Share on X</button>
+        <button class="btn-share btn-share-fb" onclick="shareToFacebook()">&#xf09a; Share on Facebook</button>
+        <button class="btn-share btn-share-ig" onclick="shareToInstagram()">&#x1F4F7; Save for Instagram</button>
+      </div>
+      <div class="share-preview" id="sharePreview">
+        <canvas id="shareCanvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-footer">
+    Every second counts. Make them matter.<br>
+    <a href="/">DailyBuildAI</a> · Build #3
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+<div class="share-toast" id="shareToast"></div>
+
+<script>
+  // ── State ──────────────────────────────────────
+  let birthDate = null;
+  let timerInterval = null;
+  const LIFE_EXPECTANCY = 79; // global average
+  const WEEKS_IN_LIFE = LIFE_EXPECTANCY * 52;
+
+  // ── Init ───────────────────────────────────────
+  const birthdayInput = document.getElementById('birthday');
+  const goBtn = document.getElementById('goBtn');
+
+  birthdayInput.addEventListener('input', () => {
+    goBtn.disabled = !birthdayInput.value;
+  });
+
+  birthdayInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && birthdayInput.value) launchDashboard();
+  });
+
+  // Check localStorage
+  const saved = localStorage.getItem('lifedash_birthday');
+  if (saved) {
+    birthdayInput.value = saved;
+    goBtn.disabled = false;
+  }
+
+  function setPreset(dateStr) {
+    birthdayInput.value = dateStr;
+    goBtn.disabled = false;
+    birthdayInput.focus();
+  }
+
+  function goBack() {
+    if (timerInterval) clearInterval(timerInterval);
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('intro').style.display = 'flex';
+  }
+
+  // ── Launch ─────────────────────────────────────
+  function launchDashboard() {
+    const val = birthdayInput.value;
+    if (!val) return;
+
+    birthDate = new Date(val + 'T00:00:00');
+    const now = new Date();
+
+    if (birthDate >= now) {
+      alert('Please enter a date in the past.');
+      return;
+    }
+
+    localStorage.setItem('lifedash_birthday', val);
+
+    document.getElementById('intro').style.display = 'none';
+    const dash = document.getElementById('dashboard');
+    dash.style.display = 'block';
+    dash.style.animation = 'none';
+    dash.offsetHeight; // reflow
+    dash.style.animation = 'fadeIn 0.6s ease';
+
+    const dateOpts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('birthdayDisplay').textContent = birthDate.toLocaleDateString('en-US', dateOpts);
+
+    startLiveCounter();
+    renderStats();
+    renderWeeksGrid();
+    renderMilestones();
+    renderProgress();
+  }
+
+  // ── Live counter ───────────────────────────────
+  function startLiveCounter() {
+    if (timerInterval) clearInterval(timerInterval);
+
+    function update() {
+      const now = new Date();
+      const diff = now - birthDate;
+
+      // Precise age
+      let years = now.getFullYear() - birthDate.getFullYear();
+      let months = now.getMonth() - birthDate.getMonth();
+      let days = now.getDate() - birthDate.getDate();
+
+      if (days < 0) {
+        months--;
+        const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        days += prevMonth.getDate();
+      }
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      const totalDays = Math.floor(diff / 86400000);
+      const totalHours = Math.floor(diff / 3600000);
+      const totalMins = Math.floor(diff / 60000);
+      const totalSecs = Math.floor(diff / 1000);
+
+      document.getElementById('cYears').textContent = years.toLocaleString();
+      document.getElementById('cMonths').textContent = (years * 12 + months).toLocaleString();
+      document.getElementById('cDays').textContent = totalDays.toLocaleString();
+      document.getElementById('cHours').textContent = totalHours.toLocaleString();
+      document.getElementById('cMins').textContent = totalMins.toLocaleString();
+      document.getElementById('cSecs').textContent = totalSecs.toLocaleString();
+
+      // Headline
+      document.getElementById('ageHeadline').textContent = `${years} years, ${months} months & ${days} days`;
+    }
+
+    update();
+    timerInterval = setInterval(update, 1000);
+  }
+
+  // ── Stats ──────────────────────────────────────
+  function renderStats() {
+    const now = new Date();
+    const diffMs = now - birthDate;
+    const diffSecs = diffMs / 1000;
+    const diffDays = diffSecs / 86400;
+    const diffYears = diffDays / 365.25;
+
+    const stats = [
+      {
+        icon: '\u2764\uFE0F', name: 'Heartbeats',
+        val: Math.floor(diffSecs * 1.2), // ~72 bpm average
+        note: 'At ~72 beats per minute',
+        accent: true
+      },
+      {
+        icon: '\uD83C\uDF2C\uFE0F', name: 'Breaths Taken',
+        val: Math.floor(diffSecs * 0.25), // ~15 per minute
+        note: 'At ~15 breaths per minute'
+      },
+      {
+        icon: '\uD83C\uDF0D', name: 'Orbits Around the Sun',
+        val: diffYears.toFixed(4),
+        note: 'Complete trips around the sun',
+        accent: true
+      },
+      {
+        icon: '\uD83C\uDF19', name: 'Full Moons Witnessed',
+        val: Math.floor(diffDays / 29.53),
+        note: 'One every 29.53 days'
+      },
+      {
+        icon: '\uD83C\uDF05', name: 'Sunrises',
+        val: Math.floor(diffDays),
+        note: 'One for every day alive'
+      },
+      {
+        icon: '\uD83D\uDCA4', name: 'Hours Slept',
+        val: Math.floor(diffDays * 8),
+        note: 'Assuming ~8 hours per night',
+        accent: true
+      },
+      {
+        icon: '\uD83C\uDF54', name: 'Meals Eaten',
+        val: Math.floor(diffDays * 3),
+        note: 'Approximately 3 per day'
+      },
+      {
+        icon: '\uD83D\uDEB6', name: 'Steps Taken',
+        val: Math.floor(diffDays * 7500),
+        note: 'Average ~7,500 steps per day'
+      },
+      {
+        icon: '\uD83D\uDE02', name: 'Times Laughed',
+        val: Math.floor(diffDays * 17),
+        note: 'Average person laughs 17x/day'
+      },
+      {
+        icon: '\uD83D\uDCAC', name: 'Words Spoken',
+        val: Math.floor(diffDays * 16000),
+        note: 'Average ~16,000 words per day'
+      },
+      {
+        icon: '\u2615', name: 'Cups of Water',
+        val: Math.floor(diffDays * 8),
+        note: '~8 cups recommended daily'
+      },
+      {
+        icon: '\uD83C\uDF1F', name: 'Dreams Had',
+        val: Math.floor(diffDays * 4.5),
+        note: '~4-5 dream cycles per night'
+      },
+    ];
+
+    const grid = document.getElementById('statsGrid');
+    grid.innerHTML = '';
+
+    stats.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'stat-card' + (s.accent ? ' accent' : '');
+
+      const formatted = typeof s.val === 'string' ? s.val : Number(s.val).toLocaleString();
+      card.innerHTML = `
+        <span class="stat-icon">${s.icon}</span>
+        <div class="stat-val">${formatted}</div>
+        <div class="stat-name">${s.name}</div>
+        <div class="stat-note">${s.note}</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // ── Progress ───────────────────────────────────
+  function renderProgress() {
+    const now = new Date();
+    const diffYears = (now - birthDate) / (365.25 * 86400000);
+    const pct = Math.min((diffYears / LIFE_EXPECTANCY) * 100, 100);
+    const yearsLeft = Math.max(0, LIFE_EXPECTANCY - diffYears);
+
+    document.getElementById('progressPct').textContent = pct.toFixed(1) + '%';
+    document.getElementById('progressYearsLeft').textContent =
+      yearsLeft > 0 ? `~${yearsLeft.toFixed(1)} years to go` : 'Beyond average!';
+
+    // Animate
+    requestAnimationFrame(() => {
+      document.getElementById('progressFill').style.width = pct + '%';
+    });
+  }
+
+  // ── Life in Weeks ──────────────────────────────
+  function renderWeeksGrid() {
+    const now = new Date();
+    const diffWeeks = Math.floor((now - birthDate) / (7 * 86400000));
+    const totalWeeks = LIFE_EXPECTANCY * 52;
+    const grid = document.getElementById('weeksGrid');
+    grid.innerHTML = '';
+
+    const tooltip = document.getElementById('tooltip');
+
+    for (let year = 0; year < LIFE_EXPECTANCY; year++) {
+      const row = document.createElement('div');
+      row.className = 'weeks-row';
+
+      // Year label every 5 years
+      const label = document.createElement('div');
+      label.className = 'year-label';
+      label.textContent = (year % 5 === 0) ? year : '';
+      row.appendChild(label);
+
+      for (let week = 0; week < 52; week++) {
+        const weekNum = year * 52 + week;
+        const cell = document.createElement('div');
+        cell.className = 'week-cell';
+
+        if (weekNum < diffWeeks) {
+          cell.classList.add('lived');
+        } else if (weekNum === diffWeeks) {
+          cell.classList.add('current');
+        } else {
+          cell.classList.add('future');
+        }
+
+        // Tooltip
+        cell.addEventListener('mouseenter', (e) => {
+          const age = year;
+          const weekInYear = week + 1;
+          const weekDate = new Date(birthDate.getTime() + weekNum * 7 * 86400000);
+          const dateStr = weekDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+          tooltip.innerHTML = `<strong>Age ${age}, Week ${weekInYear}</strong> · ${dateStr}`;
+          tooltip.classList.add('show');
+        });
+
+        cell.addEventListener('mousemove', (e) => {
+          tooltip.style.left = (e.clientX + 12) + 'px';
+          tooltip.style.top = (e.clientY - 32) + 'px';
+        });
+
+        cell.addEventListener('mouseleave', () => {
+          tooltip.classList.remove('show');
+        });
+
+        row.appendChild(cell);
+      }
+
+      grid.appendChild(row);
+    }
+
+    document.getElementById('weeksLived').textContent = diffWeeks.toLocaleString();
+    document.getElementById('weeksLeft').textContent = Math.max(0, totalWeeks - diffWeeks).toLocaleString();
+  }
+
+  // ── Milestones ─────────────────────────────────
+  function renderMilestones() {
+    const now = new Date();
+    const ageYears = (now - birthDate) / (365.25 * 86400000);
+
+    const milestones = [
+      { age: 1, icon: '\uD83D\uDC76', name: 'First Birthday', detail: 'Your first trip around the sun' },
+      { age: 5, icon: '\uD83C\uDF92', name: 'Started School', detail: 'The beginning of your learning journey' },
+      { age: 10, icon: '\uD83C\uDF1F', name: 'Double Digits', detail: 'A whole decade of life' },
+      { age: 13, icon: '\uD83C\uDF89', name: 'Became a Teenager', detail: 'Welcome to the teen years' },
+      { age: 16, icon: '\uD83D\uDE97', name: 'Sweet Sixteen', detail: 'Old enough to drive in many places' },
+      { age: 18, icon: '\uD83C\uDF93', name: 'Legal Adult', detail: 'Officially an adult in most countries' },
+      { age: 21, icon: '\uD83C\uDF7B', name: 'Twenty-One', detail: 'A milestone birthday worldwide' },
+      { age: 25, icon: '\uD83E\uDDE0', name: 'Brain Fully Developed', detail: 'Prefrontal cortex fully matures' },
+      { age: 30, icon: '\uD83D\uDCAA', name: 'Dirty Thirty', detail: 'Three decades of experience' },
+      { age: 40, icon: '\uD83C\uDFAF', name: 'Forty & Fabulous', detail: 'The big 4-0' },
+      { age: 50, icon: '\uD83C\uDF1E', name: 'Half Century', detail: '50 years of memories' },
+      { age: 60, icon: '\uD83C\uDF3F', name: 'Sixty & Wise', detail: 'Six decades of wisdom' },
+      { age: 65, icon: '\uD83C\uDFD6\uFE0F', name: 'Retirement Age', detail: 'Traditional retirement milestone' },
+      { age: 70, icon: '\uD83C\uDF33', name: 'Seventy', detail: 'Seven decades of life' },
+      { age: 80, icon: '\u2B50', name: 'Octogenarian', detail: 'A truly remarkable achievement' },
+      { age: 90, icon: '\uD83D\uDC8E', name: 'Ninety', detail: 'Nine decades of living' },
+      { age: 100, icon: '\uD83C\uDFC6', name: 'Centenarian', detail: 'A century of life!' },
+    ];
+
+    const grid = document.getElementById('milestonesGrid');
+    grid.innerHTML = '';
+
+    milestones.forEach(m => {
+      const reached = ageYears >= m.age;
+      const ms = document.createElement('div');
+      ms.className = 'milestone ' + (reached ? 'reached' : 'upcoming');
+
+      const msDate = new Date(birthDate.getTime() + m.age * 365.25 * 86400000);
+      const dateStr = msDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+      ms.innerHTML = `
+        <span class="milestone-icon">${m.icon}</span>
+        <div class="milestone-info">
+          <div class="milestone-name">${m.name}</div>
+          <div class="milestone-detail">${m.detail} · ${dateStr}</div>
+        </div>
+        <span class="milestone-status">${reached ? '\u2713 Reached' : 'Upcoming'}</span>
+      `;
+      grid.appendChild(ms);
+    });
+  }
+
+  // ── Share Image ────────────────────────────────
+  function showToast(msg) {
+    const toast = document.getElementById('shareToast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  function generateShareImage() {
+    const now = new Date();
+    const diffMs = now - birthDate;
+    const diffSecs = diffMs / 1000;
+    const diffDays = diffSecs / 86400;
+    const diffYears = diffDays / 365.25;
+
+    let years = now.getFullYear() - birthDate.getFullYear();
+    let months = now.getMonth() - birthDate.getMonth();
+    let days = now.getDate() - birthDate.getDate();
+    if (days < 0) { months--; days += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+    if (months < 0) { years--; months += 12; }
+
+    const canvas = document.getElementById('shareCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = 1080;
+    const H = 1120;
+    canvas.width = W;
+    canvas.height = H;
+
+    // Background
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#07070f');
+    bg.addColorStop(0.5, '#0e0e1c');
+    bg.addColorStop(1, '#07070f');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle border
+    ctx.strokeStyle = '#1e1e3a';
+    ctx.lineWidth = 2;
+    ctx.roundRect(16, 16, W - 32, H - 32, 24);
+    ctx.stroke();
+
+    // Inner glow at top
+    const glow = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, 500);
+    glow.addColorStop(0, 'rgba(245,158,11,0.06)');
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, 500);
+
+    // Title
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#64748b';
+    ctx.font = '600 20px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText('MY LIFE AT A GLANCE', W / 2, 80);
+
+    // Age headline
+    ctx.font = '800 52px -apple-system, BlinkMacSystemFont, sans-serif';
+    const ageGrad = ctx.createLinearGradient(200, 0, 880, 0);
+    ageGrad.addColorStop(0, '#f59e0b');
+    ageGrad.addColorStop(1, '#ef4444');
+    ctx.fillStyle = ageGrad;
+    ctx.fillText(`${years} years, ${months} months & ${days} days`, W / 2, 140);
+
+    // Birthday
+    const bStr = birthDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    ctx.font = '400 22px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#475569';
+    ctx.fillText(`Born ${bStr}`, W / 2, 180);
+
+    // ── Counter row (top, like on the website) ──
+    const totalDays = Math.floor(diffSecs / 86400);
+    const totalHours = Math.floor(diffSecs / 3600);
+    const totalMins = Math.floor(diffSecs / 60);
+    const totalSecsVal = Math.floor(diffSecs);
+
+    const counterData = [
+      { val: years.toLocaleString(), label: 'YEARS' },
+      { val: (years * 12 + months).toLocaleString(), label: 'MONTHS' },
+      { val: totalDays.toLocaleString(), label: 'DAYS' },
+      { val: totalHours.toLocaleString(), label: 'HOURS' },
+      { val: totalMins.toLocaleString(), label: 'MINUTES' },
+      { val: totalSecsVal.toLocaleString(), label: 'SECONDS' },
+    ];
+
+    const cCols = 3;
+    const cCardW = (W - 160 - 24) / cCols;
+    const cCardH = 72;
+    const counterY = 210;
+
+    counterData.forEach((c, i) => {
+      const col = i % cCols;
+      const row = Math.floor(i / cCols);
+      const x = 80 + col * (cCardW + 12);
+      const y = counterY + row * (cCardH + 10);
+
+      ctx.beginPath();
+      ctx.roundRect(x, y, cCardW, cCardH, 10);
+      ctx.fillStyle = '#0e0e1c';
+      ctx.fill();
+      ctx.strokeStyle = '#1e1e3a';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.textAlign = 'center';
+      ctx.font = '800 22px "SF Mono", "Fira Code", monospace, -apple-system, sans-serif';
+      ctx.fillStyle = '#f1f5f9';
+      ctx.fillText(c.val, x + cCardW / 2, y + 34);
+
+      ctx.font = '600 11px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillStyle = '#475569';
+      ctx.fillText(c.label, x + cCardW / 2, y + 56);
+    });
+
+    // ── Progress bar ──
+    const pct = Math.min((diffYears / LIFE_EXPECTANCY) * 100, 100);
+    const barX = 80;
+    const barW = W - 160;
+    const barY = counterY + 2 * (cCardH + 10) + 30;
+    const barH = 16;
+
+    ctx.font = '700 28px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText(`${pct.toFixed(1)}%`, barX, barY - 10);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#334155';
+    ctx.font = '400 18px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText(`of ${LIFE_EXPECTANCY}-year average lifespan`, barX + barW, barY - 12);
+
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barW, barH, 8);
+    ctx.fillStyle = '#1e1e3a';
+    ctx.fill();
+
+    const fillW = barW * (pct / 100);
+    if (fillW > 0) {
+      const barGrad = ctx.createLinearGradient(barX, 0, barX + fillW, 0);
+      barGrad.addColorStop(0, '#f59e0b');
+      barGrad.addColorStop(1, '#ef4444');
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, fillW, barH, 8);
+      ctx.fillStyle = barGrad;
+      ctx.fill();
+    }
+
+    // ── Stats grid ──
+    const statsData = [
+      { icon: '\u2764\uFE0F', name: 'Heartbeats', val: Math.floor(diffSecs * 1.2) },
+      { icon: '\uD83C\uDF2C\uFE0F', name: 'Breaths', val: Math.floor(diffSecs * 0.25) },
+      { icon: '\uD83C\uDF0D', name: 'Orbits', val: diffYears.toFixed(4) },
+      { icon: '\uD83C\uDF19', name: 'Full Moons', val: Math.floor(diffDays / 29.53) },
+      { icon: '\uD83C\uDF05', name: 'Sunrises', val: Math.floor(diffDays) },
+      { icon: '\uD83D\uDCA4', name: 'Hours Slept', val: Math.floor(diffDays * 8) },
+      { icon: '\uD83C\uDF54', name: 'Meals Eaten', val: Math.floor(diffDays * 3) },
+      { icon: '\uD83D\uDEB6', name: 'Steps Taken', val: Math.floor(diffDays * 7500) },
+      { icon: '\uD83D\uDE02', name: 'Times Laughed', val: Math.floor(diffDays * 17) },
+      { icon: '\uD83D\uDCAC', name: 'Words Spoken', val: Math.floor(diffDays * 16000) },
+      { icon: '\u2615', name: 'Cups of Water', val: Math.floor(diffDays * 8) },
+      { icon: '\uD83C\uDF1F', name: 'Dreams Had', val: Math.floor(diffDays * 4.5) },
+    ];
+
+    const cols = 3;
+    const cardW = (W - 160 - 24) / cols;
+    const cardH = 130;
+    const startY = barY + 40;
+
+    statsData.forEach((s, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = 80 + col * (cardW + 12);
+      const y = startY + row * (cardH + 12);
+
+      ctx.beginPath();
+      ctx.roundRect(x, y, cardW, cardH, 12);
+      ctx.fillStyle = '#0e0e1c';
+      ctx.fill();
+      ctx.strokeStyle = '#1e1e3a';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.font = '28px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(s.icon, x + 16, y + 38);
+
+      const formatted = typeof s.val === 'string' ? s.val : Number(s.val).toLocaleString();
+      ctx.font = '800 22px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillStyle = '#f1f5f9';
+      ctx.fillText(formatted, x + 16, y + 76);
+
+      ctx.font = '600 13px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillStyle = '#64748b';
+      ctx.fillText(s.name.toUpperCase(), x + 16, y + 106);
+    });
+
+    // Bottom bar with URL
+    ctx.textAlign = 'center';
+    ctx.font = '600 20px -apple-system, BlinkMacSystemFont, sans-serif';
+    const urlGrad = ctx.createLinearGradient(300, 0, 780, 0);
+    urlGrad.addColorStop(0, '#f59e0b');
+    urlGrad.addColorStop(1, '#ef4444');
+    ctx.fillStyle = urlGrad;
+    ctx.fillText('dailybuildai.com/builds/2026-02-26', W / 2, H - 60);
+
+    ctx.font = '400 16px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#334155';
+    ctx.fillText('See your own life in numbers \u2191', W / 2, H - 35);
+
+    // Show preview & download
+    document.getElementById('sharePreview').style.display = 'block';
+    document.getElementById('btnDownload').style.display = 'inline-flex';
+    document.getElementById('socialShareRow').style.display = 'flex';
+
+    showToast('Image generated! Download or share below.');
+  }
+
+  function downloadShareImage() {
+    const canvas = document.getElementById('shareCanvas');
+    const link = document.createElement('a');
+    link.download = 'my-life-dashboard.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('Image downloaded!');
+  }
+
+  function shareToX() {
+    const text = encodeURIComponent('Check out my Life Dashboard — see your life in numbers! 🧬');
+    const url = encodeURIComponent('https://dailybuildai.com/builds/2026-02-26/');
+    window.open(`https://x.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+  }
+
+  function shareToFacebook() {
+    const url = encodeURIComponent('https://dailybuildai.com/builds/2026-02-26/');
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+  }
+
+  function shareToInstagram() {
+    downloadShareImage();
+    showToast('Image downloaded! Open Instagram and share it as a post or story.');
+  }
+</script>
+</body>
+</html>

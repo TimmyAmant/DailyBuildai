@@ -17,6 +17,15 @@
       "path": "/builds/2026-02-25/",
       "approved": true,
       "thumbClass": "thumb-scrapeview"
+    },
+    {
+      "date": "2026-02-26",
+      "title": "Life Dashboard",
+      "category": "Data Visualization",
+      "description": "Enter your birthday and see your life visualized — heartbeats, breaths, orbits, milestones, and every week you've lived",
+      "path": "/builds/2026-02-26/",
+      "approved": false,
+      "thumbClass": "thumb-life-dashboard"
     }
   ]
 }
