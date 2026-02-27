@@ -33,7 +33,7 @@
       "category": "Cryptography Tool",
       "description": "Encode and decode secret messages with 8 classic ciphers — Caesar, ROT13, Atbash, Vigen\u00e8re, Morse, Binary, and more",
       "path": "/builds/2026-02-27/",
-      "approved": false,
+      "approved": true,
       "thumbClass": "thumb-cipher-machine"
     }
   ]

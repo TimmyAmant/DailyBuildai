@@ -324,6 +324,50 @@ a { color: inherit; text-decoration: none; }
   100% { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── Share row ─── */
+.share-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.share-btn {
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.share-btn-copy {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-color: rgba(0,255,65,0.3);
+}
+.share-btn-copy:hover { border-color: var(--accent); box-shadow: 0 0 12px rgba(0,255,65,0.15); }
+
+.share-btn-x {
+  background: #000;
+  color: #fff;
+  border-color: #333;
+}
+.share-btn-x:hover { border-color: #1d9bf0; }
+
+.share-btn-fb {
+  background: #1877f2;
+  color: #fff;
+  border-color: #1877f2;
+}
+.share-btn-fb:hover { opacity: 0.9; }
+
 /* ─── Info card ─── */
 .info-card {
   background: var(--surface);
@@ -504,6 +548,13 @@ a { color: inherit; text-decoration: none; }
       </div>
       <div class="output-text" id="outputArea"></div>
     </div>
+  </div>
+
+  <!-- Share -->
+  <div class="share-row" id="shareRow" style="display:none">
+    <button class="share-btn share-btn-copy" onclick="copyOutput()">&#x1F4CB; Copy Text</button>
+    <button class="share-btn share-btn-x" onclick="shareToX()">&#x1D54F; Share on X</button>
+    <button class="share-btn share-btn-fb" onclick="shareToFB()">&#x1F310; Share on Facebook</button>
   </div>
 
   <!-- Info card -->
@@ -843,6 +894,7 @@ a { color: inherit; text-decoration: none; }
     const result = process(input);
     animateOutput(result);
     updateRefTable();
+    document.getElementById('shareRow').style.display = input ? 'flex' : 'none';
   }
 
   function debouncedUpdate() {
@@ -868,6 +920,23 @@ a { color: inherit; text-decoration: none; }
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  function getOutputText() {
+    return document.getElementById('outputArea').textContent.replace(/\u00a0/g, ' ');
+  }
+
+  function shareToX() {
+    const encoded = getOutputText();
+    const cipher = currentCipher.charAt(0).toUpperCase() + currentCipher.slice(1);
+    const text = encodeURIComponent(`Can you crack this? [${cipher} cipher]\n\n${encoded.slice(0, 200)}${encoded.length > 200 ? '...' : ''}`);
+    const url = encodeURIComponent('https://dailybuildai.com/builds/2026-02-27/');
+    window.open(`https://x.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+  }
+
+  function shareToFB() {
+    const url = encodeURIComponent('https://dailybuildai.com/builds/2026-02-27/');
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
   }
 
   // ─── Cipher selection ───
