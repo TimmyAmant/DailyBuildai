@@ -473,6 +473,7 @@ a { color: inherit; text-decoration: none; }
     <button class="cipher-btn" data-cipher="binary">Binary</button>
     <button class="cipher-btn" data-cipher="reverse">Reverse</button>
     <button class="cipher-btn" data-cipher="a1z26">A1Z26</button>
+    <button class="cipher-btn" data-cipher="phantom">Phantom</button>
   </div>
 
   <!-- Encode / Decode toggle -->
@@ -573,6 +574,11 @@ a { color: inherit; text-decoration: none; }
     a1z26: {
       title: 'About A1Z26 Cipher',
       text: 'Replaces each letter with its position in the alphabet. A = <code>1</code>, B = <code>2</code>, ..., Z = <code>26</code>. Numbers are separated by dashes. Simple substitution, but useful as a building block in puzzle design.',
+      hasKey: false
+    },
+    phantom: {
+      title: 'About Phantom Cipher',
+      text: 'A custom 5-layer cipher exclusive to Cipher Machine. Applies: <code>1)</code> Scrambled alphabet substitution, <code>2)</code> Pseudo-random key stream shift (seed-based PRNG), <code>3)</code> Full reversal, <code>4)</code> Position-dependent polyalphabetic shift, <code>5)</code> Hex nibble interleaving. The output is twice as long as the input and virtually impossible to crack without the exact source code.',
       hasKey: false
     }
   };
@@ -693,6 +699,89 @@ a { color: inherit; text-decoration: none; }
     ).join(' ');
   }
 
+  // ─── Phantom Cipher (custom, multi-layer) ───
+  // Internal substitution table — scrambled alphabet
+  const _dbSub = 'QWERTYUIOPASDFGHJKLZXCVBNM';
+  const _dbSubR = Array(26).fill(0);
+  for (let i = 0; i < 26; i++) _dbSubR[_dbSub.charCodeAt(i) - 65] = i;
+
+  // Internal key stream from seed
+  function _dbKeyStream(len, seed) {
+    const ks = [];
+    let h = seed;
+    for (let i = 0; i < len; i++) {
+      h = ((h * 31337) + 7919) & 0xFFFF;
+      ks.push(h % 26);
+    }
+    return ks;
+  }
+
+  function phantomEncode(text) {
+    const seed = 48271; // fixed internal seed
+    // Step 1: Substitution — map each letter through scrambled alphabet
+    let result = text.split('').map(c => {
+      if (/[a-z]/.test(c)) return _dbSub[c.charCodeAt(0) - 97].toLowerCase();
+      if (/[A-Z]/.test(c)) return _dbSub[c.charCodeAt(0) - 65];
+      return c;
+    }).join('');
+    // Step 2: Key-stream shift (pseudo-random shift per position)
+    const letters = result.split('').filter(c => /[a-zA-Z]/.test(c));
+    const ks = _dbKeyStream(letters.length, seed);
+    let ki = 0;
+    result = result.split('').map(c => {
+      if (/[a-z]/.test(c)) { const s = ks[ki++]; return String.fromCharCode(((c.charCodeAt(0) - 97 + s) % 26) + 97); }
+      if (/[A-Z]/.test(c)) { const s = ks[ki++]; return String.fromCharCode(((c.charCodeAt(0) - 65 + s) % 26) + 65); }
+      return c;
+    }).join('');
+    // Step 3: Reverse
+    result = result.split('').reverse().join('');
+    // Step 4: Position-dependent shift (+position*3+7)
+    result = result.split('').map((c, i) => {
+      const s = (i * 3 + 7) % 26;
+      if (/[a-z]/.test(c)) return String.fromCharCode(((c.charCodeAt(0) - 97 + s) % 26) + 97);
+      if (/[A-Z]/.test(c)) return String.fromCharCode(((c.charCodeAt(0) - 65 + s) % 26) + 65);
+      return c;
+    }).join('');
+    // Step 5: Interleave with hash hex nibble
+    return result.split('').map((c, i) => {
+      const h = ((c.charCodeAt(0) * 13 + i * 37 + 173) % 16).toString(16);
+      return c + h;
+    }).join('');
+  }
+
+  function phantomDecode(text) {
+    const seed = 48271;
+    // Step 5 reverse: Remove interleaved hex nibbles
+    let chars = [];
+    for (let i = 0; i < text.length; i += 2) chars.push(text[i]);
+    let result = chars.join('');
+    // Step 4 reverse: Undo position shift
+    result = result.split('').map((c, i) => {
+      const s = (i * 3 + 7) % 26;
+      if (/[a-z]/.test(c)) return String.fromCharCode(((c.charCodeAt(0) - 97 - s + 26) % 26) + 97);
+      if (/[A-Z]/.test(c)) return String.fromCharCode(((c.charCodeAt(0) - 65 - s + 26) % 26) + 65);
+      return c;
+    }).join('');
+    // Step 3 reverse: Reverse back
+    result = result.split('').reverse().join('');
+    // Step 2 reverse: Undo key-stream shift
+    const letters = result.split('').filter(c => /[a-zA-Z]/.test(c));
+    const ks = _dbKeyStream(letters.length, seed);
+    let ki = 0;
+    result = result.split('').map(c => {
+      if (/[a-z]/.test(c)) { const s = ks[ki++]; return String.fromCharCode(((c.charCodeAt(0) - 97 - s % 26 + 26) % 26) + 97); }
+      if (/[A-Z]/.test(c)) { const s = ks[ki++]; return String.fromCharCode(((c.charCodeAt(0) - 65 - s % 26 + 26) % 26) + 65); }
+      return c;
+    }).join('');
+    // Step 1 reverse: Reverse substitution
+    result = result.split('').map(c => {
+      if (/[a-z]/.test(c)) return String.fromCharCode(_dbSubR[c.charCodeAt(0) - 97] + 97);
+      if (/[A-Z]/.test(c)) return String.fromCharCode(_dbSubR[c.charCodeAt(0) - 65] + 65);
+      return c;
+    }).join('');
+    return result;
+  }
+
   // ─── Process ───
   function process(input) {
     const key = document.getElementById('keyInput').value;
@@ -715,6 +804,8 @@ a { color: inherit; text-decoration: none; }
         return reverseText(input);
       case 'a1z26':
         return currentMode === 'encode' ? a1z26Encode(input) : a1z26Decode(input);
+      case 'phantom':
+        return currentMode === 'encode' ? phantomEncode(input) : phantomDecode(input);
       default:
         return input;
     }
