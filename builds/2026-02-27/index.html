@@ -331,6 +331,55 @@ a { color: inherit; text-decoration: none; }
   justify-content: center;
   flex-wrap: wrap;
   margin-bottom: 32px;
+  align-items: center;
+}
+
+.link-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.link-toggle input { display: none; }
+
+.link-toggle-check {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border2);
+  border-radius: 4px;
+  background: var(--surface);
+  position: relative;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.link-toggle input:checked + .link-toggle-check {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.link-toggle input:checked + .link-toggle-check::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 5px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--bg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.link-toggle-label {
+  font-size: 0.75rem;
+  color: var(--text2);
+  font-family: var(--font);
+  letter-spacing: 0.03em;
 }
 
 .share-btn {
@@ -552,6 +601,11 @@ a { color: inherit; text-decoration: none; }
 
   <!-- Share -->
   <div class="share-row" id="shareRow" style="display:none">
+    <label class="link-toggle">
+      <input type="checkbox" id="includeLink" checked />
+      <span class="link-toggle-check"></span>
+      <span class="link-toggle-label">Include link to website</span>
+    </label>
     <button class="share-btn share-btn-copy" onclick="copyOutput()">&#x1F4CB; Copy Text</button>
     <button class="share-btn share-btn-x" onclick="shareToX()">&#x1D54F; Share on X</button>
     <button class="share-btn share-btn-fb" onclick="shareToFB()">&#x1F310; Share on Facebook</button>
@@ -929,14 +983,25 @@ a { color: inherit; text-decoration: none; }
   function shareToX() {
     const encoded = getOutputText();
     const cipher = currentCipher.charAt(0).toUpperCase() + currentCipher.slice(1);
-    const text = encodeURIComponent(`Can you crack this? [${cipher} cipher]\n\n${encoded.slice(0, 200)}${encoded.length > 200 ? '...' : ''}`);
-    const url = encodeURIComponent('https://dailybuildai.com/builds/2026-02-27/');
-    window.open(`https://x.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+    const includeLink = document.getElementById('includeLink').checked;
+    const msg = `Can you crack this? [${cipher} cipher]\n\n${encoded.slice(0, 200)}${encoded.length > 200 ? '...' : ''}`;
+    const text = encodeURIComponent(msg);
+    let xUrl = `https://x.com/intent/tweet?text=${text}`;
+    if (includeLink) xUrl += `&url=${encodeURIComponent('https://dailybuildai.com/builds/2026-02-27/')}`;
+    window.open(xUrl, '_blank');
   }
 
   function shareToFB() {
-    const url = encodeURIComponent('https://dailybuildai.com/builds/2026-02-27/');
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+    const includeLink = document.getElementById('includeLink').checked;
+    if (includeLink) {
+      const url = encodeURIComponent('https://dailybuildai.com/builds/2026-02-27/');
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+    } else {
+      const encoded = getOutputText();
+      const cipher = currentCipher.charAt(0).toUpperCase() + currentCipher.slice(1);
+      const text = encodeURIComponent(`Can you crack this? [${cipher} cipher]\n\n${encoded.slice(0, 200)}${encoded.length > 200 ? '...' : ''}`);
+      window.open(`https://www.facebook.com/sharer/sharer.php?quote=${text}`, '_blank');
+    }
   }
 
   // ─── Cipher selection ───
